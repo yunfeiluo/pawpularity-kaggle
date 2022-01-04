@@ -4,7 +4,12 @@ from torch import nn
 from torchvision import models
 
 class Regressor(nn.Module):
-    def __init__(self, in_size, hidden_size, out_size):
+    def __init__(
+        self, 
+        in_size=524, # 2060
+        hidden_size=2048, 
+        out_size=1
+    ):
         super().__init__()
                 
         self.fc_liner = nn.Sequential(
@@ -23,9 +28,8 @@ class Regressor(nn.Module):
         return self.forward(x)
 
 class FineTuneModel(nn.Module):
-    def __init__(self, latent_size, hidden_size, out_size, device):
+    def __init__(self):
         super().__init__()
-        self.device = device
 
         # load pretrained model (download pretrained model here if needed)
         with open('pretrained_models/resnet18.pkl', 'rb') as f:
@@ -37,21 +41,37 @@ class FineTuneModel(nn.Module):
             param.requires_grad = False
         
         # construct the final output layer(s)
-        self.regressor = Regressor(latent_size, hidden_size, out_size)
+        self.regressor = Regressor()
 
         # load pretrained mlp if available
         # self.regressor.load_state_dict(torch.load('../input/pawpularity-resnet18-2layer-mlp/resnet18_2layer_mlp.model'))
     
-    def forward(self, x, meta):
-        feat_out = self.pretrain_feat(x).squeeze()
+    def forward(self, data_pack, loss_func=None):
+        # unpack
+        imgs = data_pack['images']
+        meta = data_pack['meta']
+
+        # forward
+        feat_out = self.pretrain_feat(imgs).squeeze()
+
         # do something with meta data
         N, D = feat_out.shape
         N, M = meta.shape
         out = torch.zeros((N, D+M)).to(self.device)
         out[:, :D] = feat_out
         out[:, D: ] = meta
-        return self.regressor(out).squeeze()
+
+        out = self.regressor(out).squeeze()
+
+        # compute loss
+        if loss_func is not None:
+            labels = data_pack['labels']
+            return loss_func(out, labels)
+        return out
     
-    def predict(self, x, meta):
-        return self.forward(x, meta)
+    def predict(self, data_pack):
+        # unpack
+        labels = data_pack['labels']
+
+        return self.forward(data_pack), labels
 

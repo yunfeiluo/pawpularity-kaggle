@@ -6,29 +6,24 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print('device:', device)
 
-    # hyper-parameter config
-    lr = 1e-4
+    # config
+    batch_size = 64
     epochs = 30
-    batch_size = 256
-    hidden_size = 2048
-
-    latent_out = 524 # 2060
 
     print('Construct models...')
-    model = FineTuneModel(latent_out, hidden_size, 1, device).to(device)
+    model = FineTuneModel().to(device)
     print('Num params:', sum(p.numel() for p in model.parameters() if p.requires_grad))
     
     optimizer = torch.optim.Adam(
         model.parameters(),
-        lr=lr,
+        lr=1e-4,
     #     momentum=0.9, 
     #     nesterov=True
     )
     loss_func = nn.MSELoss()
-    # loss_func = nn.L1Loss()
 
     print('Construct dataloaders...')
-    train_dataloader, val_dataloader = load_imgs('train', batch_size=batch_size, val_size=0)
+    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0.2)
 
     train_val(
         model, 
@@ -37,7 +32,6 @@ if __name__ == '__main__':
         epochs, 
         train_dataloader, 
         val_dataloader,
-        device,
         verbose=True
     )
 
