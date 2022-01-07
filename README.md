@@ -1,5 +1,5 @@
 # pawpularity-kaggle
-Platform for Pawpularity Kaggle contest
+Platform for Pawpularity Kaggle contest https://www.kaggle.com/c/petfinder-pawpularity-score  
 
 # Models tried
 - Gamma Regression on meta data: RMSE ~20  
