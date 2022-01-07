@@ -1,5 +1,6 @@
-from src.utils import *
+from src.train_utils import *
 from src.models import *
+from src.data_loader import *
 
 if __name__ == '__main__':
     # use gpu if available

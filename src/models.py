@@ -15,20 +15,28 @@ class Regressor(nn.Module):
         self.fc_liner = nn.Sequential(
             nn.Linear(in_size, hidden_size),
             nn.ReLU(),
-            # nn.Linear(hidden_size, hidden_size // 2),
-            nn.ReLU(),
             nn.Linear(hidden_size, out_size),
             nn.Softplus(),
         )
     
-    def forward(self, x):
-        return self.fc_liner(x).squeeze()
-    
-    def predict(self, x):
-        return self.forward(x)
+    def forward(self, data_pack, loss_func=None):
+        samples = data_pack['samples']
+        out = self.fc_liner(samples).squeeze()
 
-class FineTuneModel(nn.Module):
-    def __init__(self):
+        # compute loss
+        if loss_func is not None:
+            labels = data_pack['labels']
+            return loss_func(out, labels)
+        return out
+    
+    def predict(self, data_pack):
+        # unpack
+        labels = data_pack['labels']
+        
+        return self.forward(data_pack), labels
+
+class ResNet18(nn.Module):
+    def __init__(self, finetune=False):
         super().__init__()
 
         # load pretrained model (download pretrained model here if needed)
@@ -38,21 +46,27 @@ class FineTuneModel(nn.Module):
         
         # make the model fine-tuned
         for param in self.pretrain_feat.parameters():
-            param.requires_grad = False
+            param.requires_grad = finetune
+    
+    def forward(self, x):
+        return self.pretrain_feat(x)
+
+class IntegratedModel(nn.Module):
+    def __init__(self, feature_extractor=None, regressor=None):
+        super().__init__()
+
+        self.feature_extractor = ResNet18(finetune=True) if feature_extractor is None else feature_extractor
         
         # construct the final output layer(s)
-        self.regressor = Regressor()
+        self.regressor = Regressor() if regressor is None else regressor
 
-        # load pretrained mlp if available
-        # self.regressor.load_state_dict(torch.load('../input/pawpularity-resnet18-2layer-mlp/resnet18_2layer_mlp.model'))
-    
     def forward(self, data_pack, loss_func=None):
         # unpack
         imgs = data_pack['images']
         meta = data_pack['meta']
 
         # forward
-        feat_out = self.pretrain_feat(imgs).squeeze()
+        feat_out = self.feature_extractor(imgs).squeeze()
 
         # do something with meta data
         N, D = feat_out.shape
@@ -61,7 +75,9 @@ class FineTuneModel(nn.Module):
         out[:, :D] = feat_out
         out[:, D: ] = meta
 
-        out = self.regressor(out).squeeze()
+        # final out
+        regressor_pack = {'samples': out}
+        out = self.regressor(regressor_pack).squeeze()
 
         # compute loss
         if loss_func is not None:

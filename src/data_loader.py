@@ -1,10 +1,28 @@
 import os
 import pandas as pd
 import numpy as np
+from torch.utils import data
 from torchvision import transforms
 from torch.utils.data import DataLoader, Dataset
 
 from PIL import Image
+
+class SimpleDataset(Dataset):
+    def __init__(self, samples, labels, device):
+        self.samples = samples
+        self.labels = labels
+        self.device = device
+    
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+        data_pack = {
+            'samples': self.samples[idx].to(self.device).float(),
+            'labels': self.labels[idx].to(self.device).float()
+        }
+
+        return data_pack
 
 class PawpularityDataset(Dataset):
     def __init__(self, main_dir, imgs, labels, meta, transform, device):
