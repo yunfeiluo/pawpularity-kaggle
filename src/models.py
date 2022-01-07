@@ -25,7 +25,7 @@ class Regressor(nn.Module):
 
         # compute loss
         if loss_func is not None:
-            labels = data_pack['labels']
+            labels = data_pack['labels'] / 100
             return loss_func(out, labels)
         return out
     
@@ -33,7 +33,7 @@ class Regressor(nn.Module):
         # unpack
         labels = data_pack['labels']
         
-        return self.forward(data_pack), labels
+        return self.forward(data_pack) * 100, labels
 
 class Classifier(nn.Module):
     def __init__(
@@ -83,7 +83,7 @@ class MultitaskOut(nn.Module):
             reg_loss = loss_func['reg_loss']
             class_loss = loss_func['class_loss']
 
-            labels = data_pack['labels']
+            labels = data_pack['labels'] / 100
             class_labels = data_pack['class_labels'].long()
 
             return reg_loss(reg_out, labels) + class_loss(class_out, class_labels)
@@ -93,7 +93,7 @@ class MultitaskOut(nn.Module):
         # unpack
         labels = data_pack['labels']
 
-        return self.forward(data_pack), labels
+        return self.forward(data_pack) * 100, labels
 
 class ResNet18(nn.Module):
     def __init__(self, finetune=False):

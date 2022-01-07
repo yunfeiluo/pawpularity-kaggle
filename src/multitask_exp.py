@@ -86,7 +86,7 @@ if __name__ == '__main__':
     print('batch size', batch_size)
 
     print('Construct dataloaders...')
-    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0)
+    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0.2)
 
     print('Construct feature extractor...')
     feature_extractor = ResNet18().to(device)
