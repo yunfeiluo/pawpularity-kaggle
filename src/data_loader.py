@@ -18,10 +18,14 @@ class SimpleDataset(Dataset):
     def __getitem__(self, idx):
         data_pack = {
             'samples': self.samples[idx],
-            'labels': self.labels[idx]
+            'labels': self.labels[idx],
+            'class_labels': self.label_class(self.labels[idx])
         }
 
         return data_pack
+    
+    def label_class(self, label):
+        return 0 if label < 20 else 1 if label < 30 else 2 if label < 50 else 3
 
 class PawpularityDataset(Dataset):
     def __init__(self, main_dir, imgs, labels, meta, transform):
@@ -41,9 +45,13 @@ class PawpularityDataset(Dataset):
         data_pack = {
             'images': tensor_image,
             'meta': self.meta[idx],
-            'labels': self.labels[idx]
+            'labels': self.labels[idx],
+            'class_labels': self.label_class(self.labels[idx])
         }
         return data_pack
+    
+    def label_class(self, label):
+        return 0 if label < 20 else 1 if label < 30 else 2 if label < 50 else 3
 
 def load_data(folder, batch_size=64, val_size=0):
     # fetch filenames
@@ -65,7 +73,7 @@ def load_data(folder, batch_size=64, val_size=0):
         for img in img_paths:
             labels.append(labels_dict[img.split('.')[0]])
     else:
-        labels = [None for i in range(len(img_paths))]
+        labels = [-1 for i in range(len(img_paths))]
     
     # fetch meta data
     meta_dict = dict()

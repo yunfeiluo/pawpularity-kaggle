@@ -35,6 +35,66 @@ class Regressor(nn.Module):
         
         return self.forward(data_pack), labels
 
+class Classifier(nn.Module):
+    def __init__(
+        self, 
+        in_size=524, # 2060
+        hidden_size=2048, 
+        out_size=4
+    ):
+        super().__init__()
+                
+        self.fc_liner = nn.Sequential(
+            nn.Linear(in_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, out_size),
+        )
+    
+    def forward(self, data_pack, loss_func=None):
+        samples = data_pack['samples']
+        out = self.fc_liner(samples).squeeze()
+
+        # compute loss
+        if loss_func is not None:
+            labels = data_pack['class_labels'].long()
+            return loss_func(out, labels)
+        return out
+    
+    def predict(self, data_pack):
+        # unpack
+        labels = data_pack['class_labels'].long()
+        
+        return self.forward(data_pack).argmax(dim=1).squeeze(), labels
+
+class MultitaskOut(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.regressor = Regressor()
+        self.classifier = Classifier()
+    
+    def forward(self, data_pack, loss_func=None):
+        feat_pack = {'samples': data_pack['samples']}
+        reg_out = self.regressor(feat_pack)
+        class_out = self.classifier(feat_pack)
+
+        # compute loss
+        if loss_func is not None:
+            reg_loss = loss_func['reg_loss']
+            class_loss = loss_func['class_loss']
+
+            labels = data_pack['labels']
+            class_labels = data_pack['class_labels'].long()
+
+            return reg_loss(reg_out, labels) + class_loss(class_out, class_labels)
+        return reg_out
+    
+    def predict(self, data_pack):
+        # unpack
+        labels = data_pack['labels']
+
+        return self.forward(data_pack), labels
+
 class ResNet18(nn.Module):
     def __init__(self, finetune=False):
         super().__init__()
@@ -50,6 +110,8 @@ class ResNet18(nn.Module):
     
     def forward(self, x):
         return self.pretrain_feat(x).squeeze()
+
+# SPLIT_LINE =====================================================================================
 
 class IntegratedModel(nn.Module):
     def __init__(self, device, feature_extractor=None, regressor=None):
@@ -78,14 +140,12 @@ class IntegratedModel(nn.Module):
         out[:, D: ] = meta
 
         # final out
-        regressor_pack = {'samples': out}
-        out = self.regressor(regressor_pack)
-
         # compute loss
+        data_pack['samples'] = out
         if loss_func is not None:
-            labels = data_pack['labels']
-            return loss_func(out, labels)
-        return out
+            return self.regressor(data_pack, loss_func)
+        else:
+            return self.regressor(data_pack)
     
     def predict(self, data_pack):
         # unpack
