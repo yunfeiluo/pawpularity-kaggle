@@ -9,6 +9,7 @@ def train_val(
     epochs, 
     train_dataloader, 
     val_dataloader, 
+    device, 
     verbose=True
 ):
 
@@ -20,6 +21,10 @@ def train_val(
         # train
         model.train()
         for data_pack in train_dataloader:
+            # move to device
+            for key in data_pack:
+                data_pack[key] = data_pack[key].to(device).float()
+
             # forward
             loss = model(data_pack, loss_func=loss_func)
 
@@ -42,6 +47,10 @@ def train_val(
             val_pred = list()
             val_true = list()
             for data_pack in val_dataloader:
+                # move to device
+                for key in data_pack:
+                    data_pack[key] = data_pack[key].to(device).float()
+
                 # foward
                 pred, true = model.predict(data_pack)
 

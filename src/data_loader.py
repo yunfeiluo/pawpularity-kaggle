@@ -8,30 +8,28 @@ from torch.utils.data import DataLoader, Dataset
 from PIL import Image
 
 class SimpleDataset(Dataset):
-    def __init__(self, samples, labels, device):
+    def __init__(self, samples, labels):
         self.samples = samples
         self.labels = labels
-        self.device = device
     
     def __len__(self):
         return len(self.samples)
     
     def __getitem__(self, idx):
         data_pack = {
-            'samples': self.samples[idx].to(self.device).float(),
-            'labels': self.labels[idx].to(self.device).float()
+            'samples': self.samples[idx],
+            'labels': self.labels[idx]
         }
 
         return data_pack
 
 class PawpularityDataset(Dataset):
-    def __init__(self, main_dir, imgs, labels, meta, transform, device):
+    def __init__(self, main_dir, imgs, labels, meta, transform):
         self.main_dir = main_dir
         self.transform = transform
         self.all_imgs = imgs
         self.labels = labels
         self.meta = meta
-        self.device = device
 
     def __len__(self):
         return len(self.all_imgs)
@@ -41,9 +39,9 @@ class PawpularityDataset(Dataset):
         image = Image.open(img_loc).convert("RGB")
         tensor_image = self.transform(image)
         data_pack = {
-            'images': tensor_image.to(self.device).float(),
-            'meta': self.meta[idx].to(self.device).float(),
-            'labels': self.labels[idx].to(self.device).float()
+            'images': tensor_image,
+            'meta': self.meta[idx],
+            'labels': self.labels[idx]
         }
         return data_pack
 

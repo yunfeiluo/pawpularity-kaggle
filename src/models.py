@@ -49,12 +49,14 @@ class ResNet18(nn.Module):
             param.requires_grad = finetune
     
     def forward(self, x):
-        return self.pretrain_feat(x)
+        return self.pretrain_feat(x).squeeze()
 
 class IntegratedModel(nn.Module):
-    def __init__(self, feature_extractor=None, regressor=None):
+    def __init__(self, device, feature_extractor=None, regressor=None):
         super().__init__()
+        self.device = device
 
+        # construct feature extractor
         self.feature_extractor = ResNet18(finetune=True) if feature_extractor is None else feature_extractor
         
         # construct the final output layer(s)
@@ -66,7 +68,7 @@ class IntegratedModel(nn.Module):
         meta = data_pack['meta']
 
         # forward
-        feat_out = self.feature_extractor(imgs).squeeze()
+        feat_out = self.feature_extractor(imgs)
 
         # do something with meta data
         N, D = feat_out.shape
@@ -77,7 +79,7 @@ class IntegratedModel(nn.Module):
 
         # final out
         regressor_pack = {'samples': out}
-        out = self.regressor(regressor_pack).squeeze()
+        out = self.regressor(regressor_pack)
 
         # compute loss
         if loss_func is not None:
