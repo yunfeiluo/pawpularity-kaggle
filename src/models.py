@@ -70,13 +70,17 @@ class MultitaskOut(nn.Module):
     def __init__(self):
         super().__init__()
 
+        in_size = 2060
+        shared_hidden_size = 512
+        hidden_size = 256
+
         self.shared_layer = nn.Sequential(
-            nn.Linear(524, 256),
+            nn.Linear(in_size, shared_hidden_size),
             nn.ReLU()
         )
 
-        self.regressor = Regressor(in_size=256, hidden_size=128)
-        self.classifier = Classifier(in_size=256, hidden_size=128)
+        self.regressor = Regressor(in_size=shared_hidden_size, hidden_size=hidden_size)
+        self.classifier = Classifier(in_size=shared_hidden_size, hidden_size=hidden_size)
     
     def forward(self, data_pack, loss_func=None):
         feat_pack = {'samples': self.shared_layer(data_pack['samples'])}
@@ -100,12 +104,13 @@ class MultitaskOut(nn.Module):
 
         return self.forward(data_pack) * 100, labels
 
-class ResNet18(nn.Module):
+class ResNet(nn.Module):
     def __init__(self, finetune=False):
         super().__init__()
 
         # load pretrained model (download pretrained model here if needed)
-        with open('pretrained_models/resnet18.pkl', 'rb') as f:
+        # with open('pretrained_models/resnet18.pkl', 'rb') as f:
+        with open('pretrained_models/resnext101_32x8d.pkl', 'rb') as f:
             pretrain_model = pickle.load(f)
             self.pretrain_feat = nn.Sequential(*(list(pretrain_model.children())[:-1]))
         
@@ -124,7 +129,7 @@ class IntegratedModel(nn.Module):
         self.device = device
 
         # construct feature extractor
-        self.feature_extractor = ResNet18(finetune=True) if feature_extractor is None else feature_extractor
+        self.feature_extractor = ResNet(finetune=True) if feature_extractor is None else feature_extractor
         
         # construct the final output layer(s)
         self.regressor = Regressor() if regressor is None else regressor

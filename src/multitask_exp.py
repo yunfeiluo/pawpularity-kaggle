@@ -53,6 +53,12 @@ def get_pretrained_out(feature_extractor, train_dataloader, val_dataloader, batc
         val_pre_loader = DataLoader(val_pre_dataset, batch_size=batch_size, shuffle=False)
     else:
         val_pre_loader = None
+    
+    # calc baseline
+    from sklearn.linear_model import LinearRegression
+    reg = LinearRegression().fit(np.array(train_samples), np.array(train_labels))
+    pred = reg.predict(np.array(val_samples))
+    print('baseline', calc_rmse(pred, np.array(val_labels)))
 
     return train_pre_loader, val_pre_loader
 
@@ -86,10 +92,10 @@ if __name__ == '__main__':
     print('batch size', batch_size)
 
     print('Construct dataloaders...')
-    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0.2)
+    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0)
 
     print('Construct feature extractor...')
-    feature_extractor = ResNet18().to(device)
+    feature_extractor = ResNet().to(device)
     print('Num params:', sum(p.numel() for p in feature_extractor.parameters() if p.requires_grad))
     
     # get pretrained out
@@ -98,10 +104,7 @@ if __name__ == '__main__':
     # print('Train Regressor...')
     # regressor = Regressor().to(device)
     # loss_func = nn.MSELoss()
-    # print('Num params:', sum(p.numel() for p in regressor.parameters() if p.requires_grad))
-    # # train_model(regressor, train_pre_loader, val_pre_loader, loss_func, device, epochs=30, lr=1e-4)
 
-    print('Train Regressor...')
     regressor = MultitaskOut().to(device)
     loss_func = {
         'reg_loss': nn.MSELoss(),
@@ -113,7 +116,7 @@ if __name__ == '__main__':
     print('Construct Integrated Model...')
     model = IntegratedModel(device, regressor=regressor).to(device)
     print('Num params:', sum(p.numel() for p in model.parameters() if p.requires_grad))
-    train_model(model, train_dataloader, val_dataloader, loss_func, device, epochs=5, lr=1e-5)
+    # train_model(model, train_dataloader, val_dataloader, loss_func, device, epochs=5, lr=1e-5)
 
     # save model
     torch.save(model.cpu().state_dict(), 'trained_model.model')
