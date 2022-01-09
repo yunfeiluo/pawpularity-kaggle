@@ -8,7 +8,7 @@ if __name__ == '__main__':
     print('device:', device)
 
     # config
-    batch_size = 64
+    batch_size = 32
     epochs = 30
 
     print('Construct models...')

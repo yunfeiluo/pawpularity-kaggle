@@ -100,6 +100,10 @@ def load_data(folder, batch_size=64, val_size=0):
     train_preprocess = transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
+            transforms.RandomHorizontalFlip(), # aug
+            transforms.RandomHorizontalFlip(), # aug
+            transforms.RandomAffine(15, translate=(0.1, 0.1), scale=(0.9, 1.1)), # aug
+            transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1), # aug
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])

@@ -15,7 +15,7 @@ def get_pretrained_out(feature_extractor, train_dataloader, val_dataloader, batc
         imgs = data_pack['images']
         labels = data_pack['labels']
 
-        print('forwarding...')
+        # print('forwarding...')
         feat_out = feature_extractor(imgs).cpu().detach().numpy()
 
         meta = data_pack['meta']
@@ -40,7 +40,7 @@ def get_pretrained_out(feature_extractor, train_dataloader, val_dataloader, batc
             imgs = data_pack['images']
             labels = data_pack['labels'] if reg else data_pack['class_labels']
 
-            print('forwarding...')
+            # print('forwarding...')
             feat_out = feature_extractor(imgs).cpu().detach().numpy()
 
             meta = data_pack['meta']
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     print('device:', device)
 
     # config
-    batch_size = 256
+    batch_size = 32
     print('batch size', batch_size)
 
     print('Construct dataloaders...')
@@ -108,12 +108,12 @@ if __name__ == '__main__':
         'class_loss': nn.CrossEntropyLoss(),
     }
     print('Num params:', sum(p.numel() for p in regressor.parameters() if p.requires_grad))
-    train_model(regressor, train_pre_loader, val_pre_loader, loss_func, device, epochs=50, lr=1e-4)
+    train_model(regressor, train_pre_loader, val_pre_loader, loss_func, device, epochs=30, lr=1e-4)
 
     print('Construct Integrated Model...')
     model = IntegratedModel(device, regressor=regressor).to(device)
     print('Num params:', sum(p.numel() for p in model.parameters() if p.requires_grad))
-    # train_model(model, train_dataloader, val_dataloader, loss_func, device, epochs=1, lr=1e-5)
+    train_model(model, train_dataloader, val_dataloader, loss_func, device, epochs=10, lr=1e-5)
 
     # save model
     torch.save(model.cpu().state_dict(), 'trained_model.model')

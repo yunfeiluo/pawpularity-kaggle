@@ -86,7 +86,7 @@ class MultitaskOut(nn.Module):
             labels = data_pack['labels'] / 100
             class_labels = data_pack['class_labels'].long()
 
-            return reg_loss(reg_out, labels) + class_loss(class_out, class_labels)
+            return reg_loss(reg_out, labels) + 1e-1 * class_loss(class_out, class_labels)
         return reg_out
     
     def predict(self, data_pack):
