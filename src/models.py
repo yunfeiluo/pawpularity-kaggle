@@ -7,7 +7,7 @@ class Regressor(nn.Module):
     def __init__(
         self, 
         in_size=524, # 2060
-        hidden_size=2048, 
+        hidden_size=256, 
         out_size=1
     ):
         super().__init__()
@@ -39,7 +39,7 @@ class Classifier(nn.Module):
     def __init__(
         self, 
         in_size=524, # 2060
-        hidden_size=2048, 
+        hidden_size=256, 
         out_size=4
     ):
         super().__init__()
