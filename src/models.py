@@ -70,11 +70,16 @@ class MultitaskOut(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.regressor = Regressor()
-        self.classifier = Classifier()
+        self.shared_layer = nn.Sequential(
+            nn.Linear(524, 256),
+            nn.ReLU()
+        )
+
+        self.regressor = Regressor(in_size=256, hidden_size=128)
+        self.classifier = Classifier(in_size=256, hidden_size=128)
     
     def forward(self, data_pack, loss_func=None):
-        feat_pack = {'samples': data_pack['samples']}
+        feat_pack = {'samples': self.shared_layer(data_pack['samples'])}
         reg_out = self.regressor(feat_pack)
         class_out = self.classifier(feat_pack)
 

@@ -86,7 +86,7 @@ if __name__ == '__main__':
     print('batch size', batch_size)
 
     print('Construct dataloaders...')
-    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0)
+    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0.2)
 
     print('Construct feature extractor...')
     feature_extractor = ResNet18().to(device)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     print('Construct Integrated Model...')
     model = IntegratedModel(device, regressor=regressor).to(device)
     print('Num params:', sum(p.numel() for p in model.parameters() if p.requires_grad))
-    # train_model(model, train_dataloader, val_dataloader, loss_func, device, epochs=10, lr=1e-5)
+    train_model(model, train_dataloader, val_dataloader, loss_func, device, epochs=5, lr=1e-5)
 
     # save model
     torch.save(model.cpu().state_dict(), 'trained_model.model')
