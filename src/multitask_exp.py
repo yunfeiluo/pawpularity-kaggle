@@ -54,11 +54,11 @@ def get_pretrained_out(feature_extractor, train_dataloader, val_dataloader, batc
     else:
         val_pre_loader = None
     
-    # calc baseline
-    from sklearn.linear_model import LinearRegression
-    reg = LinearRegression().fit(np.array(train_samples), np.array(train_labels))
-    pred = reg.predict(np.array(val_samples))
-    print('baseline', calc_rmse(pred, np.array(val_labels)))
+    # # calc baseline
+    # from sklearn.linear_model import LinearRegression
+    # reg = LinearRegression().fit(np.array(train_samples), np.array(train_labels))
+    # pred = reg.predict(np.array(val_samples))
+    # print('baseline', calc_rmse(pred, np.array(val_labels)))
 
     return train_pre_loader, val_pre_loader
 
