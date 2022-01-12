@@ -22,6 +22,9 @@ class Regressor(nn.Module):
     def forward(self, data_pack, loss_func=None):
         samples = data_pack['samples']
         out = self.fc_liner(samples).squeeze()
+        N = samples.shape[0]
+        if N == 1:
+            out = out.unsqueeze(0)
 
         # compute loss
         if loss_func is not None:
@@ -70,20 +73,24 @@ class MultitaskOut(nn.Module):
     def __init__(self):
         super().__init__()
 
-        in_size = 2060
-        shared_hidden_size = 512
-        hidden_size = 256
+        in_size = 524 # 524, 2060
+        shared_hidden_size = 256
+        hidden_size = shared_hidden_size // 2
 
-        self.shared_layer = nn.Sequential(
-            nn.Linear(in_size, shared_hidden_size),
-            nn.ReLU()
-        )
+#         self.shared_layer = nn.Sequential(
+#             nn.Linear(in_size, shared_hidden_size),
+#             nn.ReLU()
+#         )
 
-        self.regressor = Regressor(in_size=shared_hidden_size, hidden_size=hidden_size)
-        self.classifier = Classifier(in_size=shared_hidden_size, hidden_size=hidden_size)
+#         self.regressor = Regressor(in_size=shared_hidden_size, hidden_size=hidden_size)
+#         self.classifier = Classifier(in_size=shared_hidden_size, hidden_size=hidden_size)
+        
+        self.regressor = Regressor(in_size=in_size, hidden_size=shared_hidden_size)
+        self.classifier = Classifier(in_size=in_size, hidden_size=shared_hidden_size)
     
     def forward(self, data_pack, loss_func=None):
-        feat_pack = {'samples': self.shared_layer(data_pack['samples'])}
+#         feat_pack = {'samples': self.shared_layer(data_pack['samples'])}
+        feat_pack = {'samples': data_pack['samples']}
         reg_out = self.regressor(feat_pack)
         class_out = self.classifier(feat_pack)
 
@@ -108,9 +115,9 @@ class ResNet(nn.Module):
     def __init__(self, finetune=False):
         super().__init__()
 
-        # load pretrained model (download pretrained model here if needed)
-        # with open('pretrained_models/resnet18.pkl', 'rb') as f:
-        with open('pretrained_models/resnext101_32x8d.pkl', 'rb') as f:
+#         load pretrained model (download pretrained model here if needed)
+#         with open('../input/resnet/resnet18.pkl', 'rb') as f:
+        with open('../input/resnet/resnext101_32x8d.pkl', 'rb') as f:
             pretrain_model = pickle.load(f)
             self.pretrain_feat = nn.Sequential(*(list(pretrain_model.children())[:-1]))
         
@@ -119,7 +126,11 @@ class ResNet(nn.Module):
             param.requires_grad = finetune
     
     def forward(self, x):
-        return self.pretrain_feat(x).squeeze()
+        out = self.pretrain_feat(x).squeeze()
+        N = x.shape[0]
+        if N == 1:
+            out = out.unsqueeze(0)
+        return out
 
 # SPLIT_LINE =====================================================================================
 

@@ -54,11 +54,12 @@ def get_pretrained_out(feature_extractor, train_dataloader, val_dataloader, batc
     else:
         val_pre_loader = None
     
-    # # calc baseline
-    # from sklearn.linear_model import LinearRegression
-    # reg = LinearRegression().fit(np.array(train_samples), np.array(train_labels))
-    # pred = reg.predict(np.array(val_samples))
-    # print('baseline', calc_rmse(pred, np.array(val_labels)))
+    # calc baseline
+    if val_pre_loader is not None:
+        from sklearn.linear_model import LinearRegression
+        reg = LinearRegression().fit(np.array(train_samples), np.array(train_labels))
+        pred = reg.predict(np.array(val_samples))
+        print('baseline', calc_rmse(pred, np.array(val_labels)))
 
     return train_pre_loader, val_pre_loader
 
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     print('batch size', batch_size)
 
     print('Construct dataloaders...')
-    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0)
+    train_dataloader, val_dataloader = load_data('train', batch_size=batch_size, val_size=0.2)
 
     print('Construct feature extractor...')
     feature_extractor = ResNet().to(device)
